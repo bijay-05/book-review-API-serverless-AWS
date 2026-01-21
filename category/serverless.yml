@@ -64,6 +64,12 @@ functions:
           method: POST
           authorizer:
             name: cognitoJwtAuthorizer
+  optionsRequest:
+    handler: options.optionsResponse
+    events:
+      - httpApi:
+          path: /category
+          method: OPTIONS
 
 ## resources needed for lambda functions
 ## database to store data
