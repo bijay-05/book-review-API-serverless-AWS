@@ -1,5 +1,5 @@
 # "org" ensures this Service is used with the correct Serverless Framework Access Key.
-org: xx-xx-org
+org: xxx-www-eee-org
 # "app" enables Serverless Framework Dashboard features and sharing them with other Services.
 app: book-review-api
 # "service" is the name of this project. This will also be added to your AWS resource names.
@@ -7,27 +7,29 @@ service: category
 
 # try changing default to random
 stages:
+  prod:
+    params:
+      tableName: "category-table-${sls:stage}"
+
   default:
     params:
       tableName: "category-table-${sls:stage}"
-    resolvers:
-      aws-account-1:
-        type: aws
-        region: xxx-xxx
 
 #service wide settings (for all functions)
 provider:
   name: aws
+  region: ap-south-1
+  versionFunctions: false
   runtime: nodejs20.x
   httpApi:
     cors: true
     authorizers:
-      someJwtAuthorizer:
+      cognitoJwtAuthorizer:
         type: jwt
         identitySource: $request.header.Authorization
-        issuerUrl: https://cognito-idp.xxxxx.amazonaws.com/xxxxxxxx
+        issuerUrl: https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_xxxxx
         audience:
-          - xxx-ddd-www-eeee-frer
+          - xxxx-ffff-dsdsdsd-rewqsa
   ## permissions for service-wide functions to access DynamoDB
   iam:
     role:
@@ -46,22 +48,14 @@ provider:
     CATEGORY_TABLE: ${param:tableName}
 
 functions:
-  api:
-    handler: handler.handler
+  getCategoryList:
+    handler: categoryList.getCategoryList
     events:
       - httpApi:
           path: /category
           method: GET
           authorizer:
-            name: someJwtAuthorizer
-      - httpApi:
-          path: /category
-          method: POST
-          authorizer:
-            name: someJwtAuthorizer
-      - httpApi:
-          path: /category
-          method: OPTIONS
+            name: cognitoJwtAuthorizer
 
 ## resources needed for lambda functions
 ## database to store data
@@ -71,10 +65,10 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          - AttributeName: CategoryId
+          - AttributeName: categoryId
             AttributeType: S
         KeySchema:
-          - AttributeName: CategoryId
+          - AttributeName: categoryId
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${param:tableName}
