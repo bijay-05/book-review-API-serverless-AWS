@@ -40,7 +40,7 @@ exports.getCategoryList = async () => {
     return {
       statusCode: 500,
       body: JSON.stringify({
-        message: "Error creating category",
+        message: "Error retrieving categories.",
       }),
     };
   }
