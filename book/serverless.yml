@@ -1,0 +1,83 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: xxx-www-eee-org
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: book-review-api
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: book
+
+# try changing default to random
+stages:
+  prod:
+    params:
+      tableName: "book-table-${sls:stage}"
+
+  # default -> dev (on aws)
+  default:
+    params:
+      tableName: "book-table-${sls:stage}"
+
+#service wide settings (for all functions)
+provider:
+  name: aws
+  region: ap-south-1
+  versionFunctions: false
+  runtime: nodejs20.x
+  httpApi:
+    cors: true
+    authorizers:
+      cognitoJwtAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_xxxxx
+        audience:
+          - xxxx-ffff-dsdsdsd-rewqsa
+  ## permissions for service-wide functions to access DynamoDB
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt: [BookTable, Arn]
+  environment:
+    BOOK_TABLE: ${param:tableName}
+
+functions:
+  getBookList:
+    handler: bookList.getBookList
+    events:
+      - httpApi:
+          path: /book
+          method: GET
+          authorizer:
+            name: cognitoJwtAuthorizer
+  getBookDetail:
+    handler: bookGet.getBookDetail
+    events:
+      - httpApi:
+          path: /book/{id}
+          method: GET
+          authorizer:
+            name: cognitoJwtAuthorizer
+
+## resources needed for lambda functions
+## database to store data
+resources:
+  Resources:
+    BookTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: bookId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: bookId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${param:tableName}
