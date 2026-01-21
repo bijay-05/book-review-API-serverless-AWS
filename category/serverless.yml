@@ -56,6 +56,14 @@ functions:
           method: GET
           authorizer:
             name: cognitoJwtAuthorizer
+  createCategory:
+    handler: categoryCreate.createCategory
+    events:
+      - httpApi:
+          path: /category
+          method: POST
+          authorizer:
+            name: cognitoJwtAuthorizer
 
 ## resources needed for lambda functions
 ## database to store data
